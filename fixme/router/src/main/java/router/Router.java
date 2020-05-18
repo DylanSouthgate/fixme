@@ -5,30 +5,30 @@ import java.util.*;
 import java.net.*;
 import java.util.concurrent.*;
 
-public class Router {
-
+public class Router 
+{
 	public ServerSocket marketServerSocket;
-	public Socket marketClientSocket;
-	public ServerSocket brokerServerSocket;
-	public Socket brokerClientSocket;
-	public PrintWriter pr;
-	public int brokerid = 100000 + (int)(Math.random() * ((499999 - 100000) + 1));
-	public int marketid = 500000 + (int)(Math.random() * ((999999 - 500000) + 1));
-
-	public static void main(String[] args) {
+    public Socket marketClientSocket;
+    public ServerSocket brokerServerSocket;
+    public Socket brokerClientSocket;
+    public PrintWriter pr;
+    public int brokerid = 100000 + (int)(Math.random() * ((499999 - 100000) + 1));
+    public int marketid = 500000 + (int)(Math.random() * ((999999 - 500000) + 1));
+    public static void main( String[] args )
+    {
+        System.out.println( "Hello World!" );
         new Router().startServer();
     }
-
     public void startServer() {
 
-    	final ExecutorService clientProcessingPool = Executors.newFixedThreadPool(10);
+        final ExecutorService clientProcessingPool = Executors.newFixedThreadPool(10);
 
-    	Runnable serverTask = new Runnable() {
+        Runnable serverTask = new Runnable() {
             @Override
             public void run() {
                 try {
                     marketServerSocket = new ServerSocket(5000);
-                    System.out.println("Waiting for market to connect...");
+                    System.out.println("Waiting for Broker to connect... 5000");
                     while (true) {
                         marketClientSocket = marketServerSocket.accept();
                         clientProcessingPool.submit(new ClientTask(marketClientSocket , brokerClientSocket));
@@ -46,7 +46,7 @@ public class Router {
             public void run() {
                 try {
                     brokerServerSocket = new ServerSocket(5001);
-                    System.out.println("Waiting for market to connect...");
+                    System.out.println("Waiting for Market to connect... on 5001");
                     while (true) {
                         brokerClientSocket = brokerServerSocket.accept();
                         clientProcessingPool.submit(new ClientTask1(marketClientSocket , brokerClientSocket));
@@ -60,9 +60,9 @@ public class Router {
         };
 
         Thread serverThread = new Thread(serverTask);
-    	serverThread.start();
-    	Thread serverThread1 = new Thread(serverTask1);
-    	serverThread1.start();
+        serverThread.start();
+        Thread serverThread1 = new Thread(serverTask1);
+        serverThread1.start();
     }
 
     private class ClientTask implements Runnable {
@@ -75,12 +75,12 @@ public class Router {
             System.out.println("Got a market !");
             idgen(marketid, marketClientSocket);
             try {
-            	while(true)
-            	{
-                    	InputStreamReader in = new InputStreamReader(marketClientSocket.getInputStream());
-                    	BufferedReader bf = new BufferedReader(in);
+                while(true)
+                {
+                        InputStreamReader in = new InputStreamReader(marketClientSocket.getInputStream());
+                        BufferedReader bf = new BufferedReader(in);
                         String str = bf.readLine();
-                        System.out.println("Market:" + str);
+                        System.out.println("Market["+marketid+"] :" + str);
                         pr = new PrintWriter(brokerClientSocket.getOutputStream());
                         pr.println(str);
                         pr.flush();
@@ -106,12 +106,12 @@ public class Router {
             System.out.println("Got a broker !");
             idgen(brokerid, brokerClientSocket);
             try {
-            	while(true)
-            	{
-                    	InputStreamReader in = new InputStreamReader(brokerClientSocket.getInputStream());
-                    	BufferedReader bf = new BufferedReader(in);
+                while(true)
+                {
+                        InputStreamReader in = new InputStreamReader(brokerClientSocket.getInputStream());
+                        BufferedReader bf = new BufferedReader(in);
                         String str = bf.readLine();
-                        System.out.println("Broker:" + str);
+                        System.out.println("Broker["+brokerid+"] :" + str);
                         pr = new PrintWriter(marketClientSocket.getOutputStream());
                         pr.println(str);
                         pr.flush();
@@ -128,9 +128,9 @@ public class Router {
         }
     }
     public void idgen (int str, Socket test){
-    	try {
-    	pr = new PrintWriter(test.getOutputStream());
-            pr.println(str);
+        try {
+        pr = new PrintWriter(test.getOutputStream());
+            pr.println("MarketID="+marketid+"|BrokerID="+brokerid+"");
             pr.flush();
             } catch (IOException e) {
                     System.err.println("Unable to process client request");
