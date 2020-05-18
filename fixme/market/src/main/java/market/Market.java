@@ -1,16 +1,15 @@
 package market;
+
 import java.io.*; 
 import java.net.*; 
 import java.util.Scanner; 
 
 import java.util.concurrent.*;
-// Client class 
 public class Market 
-{ 
+{
 	String[] instruments = {"Copper", "Aluminium", "Nickel", "Zinc", "Lead", "Tin"};
     public static final int[] inventory = {30, 60, 90, 120,150, 180};
 	public static Socket s;
-    public static int buyorsell;
 	public static Scanner myObj;
 	public static void main(String[] args) throws IOException 
 	{ 
@@ -49,7 +48,8 @@ public class Market
                     	InputStreamReader in = new InputStreamReader(s.getInputStream());
                     	BufferedReader bf = new BufferedReader(in);
                         String str = bf.readLine();
-                        System.out.println(str);
+                        System.out.println("Broker :"+str+"");
+                        calculate(str);
                     }
                 } catch (IOException e) {
                     System.err.println("Unable to process client request");
@@ -66,4 +66,81 @@ public class Market
 			e.printStackTrace(); 
 		} 
 	}
-} 
+    public static void calculate (String str)
+    {
+        int buyorsell = 0;
+        int quantity = 0;
+        int price = 0;
+        int index = 0;
+        int i = 0;
+        String[] arr = str.split("\\|");
+        for (int a = 0; a < arr.length; a++)
+        {
+            if (a == 7)
+            {
+                buyorsell = Integer.parseInt(arr[a].split("=")[1]);
+            }
+            if (a == 9)
+            {
+                quantity = Integer.parseInt(arr[a].split("=")[1]);
+            }
+            if (a == 11)
+            {
+                
+                price = Integer.parseInt(arr[a].split("=")[1]);
+            }
+            if (a == 12)
+            {
+                
+                index = Integer.parseInt(arr[a].split("=")[1]);
+            }
+        }
+        if (buyorsell == 1)
+        {
+            if (quantity <= inventory[index])
+            {
+                inventory[index] -= quantity;
+                try {
+
+                PrintWriter pr = new PrintWriter(s.getOutputStream());
+                String userName = "Type=Exeuted|"+str+"";
+                pr.println(userName);
+                pr.flush();
+                } catch (IOException e) {
+                    System.err.println("Unable to process client request");
+                    e.printStackTrace();
+                }
+                System.out.println(inventory[index]);
+            }
+            else
+            {
+                try {
+
+                PrintWriter pr = new PrintWriter(s.getOutputStream());
+                String userName = "Type=Rejected|"+str+"";
+                pr.println(userName);
+                pr.flush();
+                } catch (IOException e) {
+                    System.err.println("Unable to process client request");
+                    e.printStackTrace();
+                }
+            }
+        }
+        else if (buyorsell == 2)
+        {
+            inventory[index] += quantity;
+            try {
+
+                PrintWriter pr = new PrintWriter(s.getOutputStream());
+                String userName = "Type=Exeuted|"+str+"";
+                pr.println(userName);
+                pr.flush();
+                } catch (IOException e) {
+                    System.err.println("Unable to process client request");
+                    e.printStackTrace();
+                }
+            System.out.println(inventory[index]);
+        }
+        
+    }
+}
